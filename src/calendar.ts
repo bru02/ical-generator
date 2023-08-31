@@ -9,8 +9,6 @@ import {
     toDurationString
 } from './tools.js';
 import ICalEvent, {ICalEventData, ICalEventJSONData} from './event.js';
-import {writeFile, writeFileSync, promises as fsPromises} from 'node:fs';
-import {ServerResponse} from 'node:http';
 import { ICalMomentDurationStub, ICalTimezone } from './types.js';
 
 
@@ -581,71 +579,6 @@ export default class ICalCalendar {
         this.data.events = [];
         return this;
     }
-
-
-    /**
-     * Save ical file using [`fs/promises`](https://nodejs.org/api/fs.html#fs_fspromises_writefile_file_data_options).
-     * Only works in node.js environments.
-     *
-     * ```javascript
-     * await calendar.save('./calendar.ical');
-     * ```
-     */
-    save(path: string): Promise<void>;
-
-    /**
-     * Save ical file with [`fs.writeFile`](http://nodejs.org/api/fs.html#fs_fs_writefile_filename_data_options_callback).
-     * Only works in node.js environments.
-     *
-     * ```javascript
-     * calendar.save('./calendar.ical', err => {
-     *     console.log(err);
-     * });
-     * ```
-     */
-    save(path: string, cb?: (err: NodeJS.ErrnoException | null) => void): this;
-    save(path: string, cb?: (err: NodeJS.ErrnoException | null) => void): this | Promise<void> {
-        if (cb) {
-            writeFile(path, this.toString(), cb);
-            return this;
-        }
-
-        return fsPromises.writeFile(path, this.toString());
-    }
-
-
-    /**
-     * Save Calendar to disk synchronously using
-     * [fs.writeFileSync](http://nodejs.org/api/fs.html#fs_fs_writefilesync_filename_data_options).
-     * Only works in node.js environments.
-     *
-     * ```javascript
-     * calendar.saveSync('./calendar.ical');
-     * ```
-     */
-    saveSync(path: string): this {
-        writeFileSync(path, this.toString());
-        return this;
-    }
-
-
-    /**
-     * Send calendar to the user when using HTTP using the passed `ServerResponse` object.
-     * Use second parameter `filename` to change the filename, which defaults to `'calendar.ics'`.
-     *
-     * @param response HTTP Response object which is used to send the calendar
-     * @param [filename = 'calendar.ics'] Filename of the calendar file
-     */
-    serve(response: ServerResponse, filename = 'calendar.ics'): this {
-        response.writeHead(200, {
-            'Content-Type': 'text/calendar; charset=utf-8',
-            'Content-Disposition': `attachment; filename="${filename}"`
-        });
-
-        response.end(this.toString());
-        return this;
-    }
-
 
     /**
      * Generates a blob to use for downloads or to generate a download URL.
